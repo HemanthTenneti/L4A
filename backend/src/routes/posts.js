@@ -6,6 +6,7 @@ const getPost = require("../controllers/posts/getPost");
 const updatePost = require("../controllers/posts/updatePost");
 const deletePost = require("../controllers/posts/deletePost");
 const closePost = require("../controllers/posts/closePost");
+const respondToPost = require("../controllers/posts/respondToPost");
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.get("/:id", getPost);
 router.put("/:id", verifyToken, updatePost);
 router.delete("/:id", verifyToken, deletePost);
 router.post("/:id/close", verifyToken, closePost);
+router.post("/:id/respond", verifyToken, respondToPost);
 
 module.exports = router;

@@ -3,6 +3,8 @@ const cors = require("cors");
 const morgan = require("morgan");
 const authRoutes = require("./routes/auth");
 const postsRoutes = require("./routes/posts");
+const categoriesRoutes = require("./routes/categories");
+const chatsRoutes = require("./routes/chats");
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.get("/", (req, res) => {
 });
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
+app.use("/categories", categoriesRoutes);
+app.use("/chats", chatsRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
