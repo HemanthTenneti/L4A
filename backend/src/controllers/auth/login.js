@@ -10,7 +10,6 @@ const prisma = new PrismaClient();
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res
         .status(400)
@@ -18,7 +17,6 @@ const login = async (req, res) => {
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
-
     if (!user) {
       return res
         .status(401)
@@ -26,7 +24,6 @@ const login = async (req, res) => {
     }
 
     const isPasswordValid = await comparePassword(password, user.passwordHash);
-
     if (!isPasswordValid) {
       return res
         .status(401)

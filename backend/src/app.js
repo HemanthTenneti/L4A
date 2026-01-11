@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const authRoutes = require("./routes/auth");
+const postsRoutes = require("./routes/posts");
 
 const app = express();
 
@@ -15,7 +16,11 @@ app.use(
   })
 );
 
+app.get("/", (req, res) => {
+  res.send("Server is online and running! Visit other routes to interact.");
+});
 app.use("/auth", authRoutes);
+app.use("/posts", postsRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
