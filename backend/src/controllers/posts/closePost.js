@@ -1,5 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const { getIO } = require("../../utils/socket");
+const {
+  sendToastToRoom,
+  createToast,
+  TOAST_TYPES,
+} = require("../../utils/toast");
 
 const prisma = new PrismaClient();
 
@@ -45,6 +50,13 @@ const closePost = async (req, res) => {
         postId: id,
         message: "Post has been closed",
       });
+
+      const toast = createToast(
+        TOAST_TYPES.WARNING,
+        "Post has been closed",
+        3000
+      );
+      sendToastToRoom(closedPost.chatRoom.id, toast);
     }
 
     res.json({

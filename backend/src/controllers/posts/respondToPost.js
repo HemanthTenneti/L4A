@@ -1,6 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const { getIO } = require("../../utils/socket");
-const { sendToastToRoom, createToast, TOAST_TYPES } = require("../../utils/toast");
+const {
+  sendToastToRoom,
+  createToast,
+  TOAST_TYPES,
+} = require("../../utils/toast");
 
 const prisma = new PrismaClient();
 
@@ -64,9 +68,22 @@ module.exports = async (req, res) => {
           },
         },
         include: {
-          participants: true,
+          participants: {
+            include: { user: true },
+          },
         },
       });
+
+      const responder = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      const toast = createToast(
+        TOAST_TYPES.INFO,
+        `${responder.username} started a chat`,
+        3000
+      );
+      sendToastToRoom(chat.id, toast);
     } else if (!chat.participants.length) {
       await prisma.chatParticipant.create({
         data: {
