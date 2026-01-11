@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum ChatRole {
+  OWNER
+  MEMBER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  avatarUrl     String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+  isVerified    Boolean   @default(false)
+  isBanned      Boolean   @default(false)
+
+  posts              Post[]
+  chatParticipants   ChatParticipant[]
+  messages           Message[]
+  notifications      Notification[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+
+  posts       Post[]
+
+  @@map("categories")
+}
+
+model Post {
+  id                        String    @id @default(cuid())
+  userId                    String
+  categoryId                String
+  title                     String
+  description               String
+  location                  String?
+  isOpen                    Boolean   @default(true)
+  allowMultipleParticipants Boolean   @default(false)
+  createdAt                 DateTime  @default(now())
+  expiresAt                 DateTime?
+  viewCount                 Int       @default(0)
+
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category            Category          @relation(fields: [categoryId], references: [id])
+  chatRoom            ChatRoom?
+  notifications       Notification[]
+
+  @@map("posts")
+}
+
+model ChatRoom {
+  id            String    @id @default(cuid())
+  postId        String    @unique
+  isGroup       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  lastMessageAt DateTime  @default(now())
+
+  post              Post                @relation(fields: [postId], references: [id], onDelete: Cascade)
+  participants      ChatParticipant[]
+  messages          Message[]
+
+  @@map("chat_rooms")
+}
+
+model ChatParticipant {
+  id         String    @id @default(cuid())
+  chatRoomId String
+  userId     String
+  role       ChatRole  @default(MEMBER)
+  joinedAt   DateTime  @default(now())
+  isMuted    Boolean   @default(false)
+
+  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+  @@map("chat_participants")
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  chatRoomId String
+  senderId   String
+  content    String
+  type       MessageType @default(TEXT)
+  createdAt  DateTime    @default(now())
+  isDeleted  Boolean     @default(false)
+
+  chatRoom   ChatRoom    @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  sender     User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  postId    String?
+  type      String
+  payload   Json
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
