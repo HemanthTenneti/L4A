@@ -13,26 +13,45 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, setPagination] = useState(null);
   const { user } = useAuth();
   const router = useRouter();
+  const LIMIT = 9;
 
   useEffect(() => {
-    loadData();
+    loadData(currentPage);
+  }, [currentPage, selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    loadCategories();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (page = 1) => {
     try {
       setLoading(true);
-      const [postsResponse, categoriesResponse] = await Promise.all([
-        api.getPosts(),
-        api.getCategories(),
-      ]);
+      const params = {
+        page,
+        limit: LIMIT,
+      };
+
+      if (selectedCategory !== "all") {
+        params.categoryId = selectedCategory;
+      }
+
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+
+      const postsResponse = await api.getPosts(params);
 
       if (postsResponse.success) {
         setPosts(postsResponse.data);
-      }
-      if (categoriesResponse.success) {
-        setCategories(categoriesResponse.data);
+        setPagination(postsResponse.pagination);
+        setTotalPages(
+          Math.ceil((postsResponse.pagination?.total || 0) / LIMIT)
+        );
       }
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -41,16 +60,38 @@ export default function Home() {
     }
   };
 
-  const filteredPosts = posts.filter(post => {
-    const matchesCategory =
-      selectedCategory === "all" ||
-      String(post.categoryId) === String(selectedCategory);
-    const matchesSearch =
-      !searchQuery ||
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const loadCategories = async () => {
+    try {
+      const categoriesResponse = await api.getCategories();
+      if (categoriesResponse.success) {
+        setCategories(categoriesResponse.data);
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  };
+
+  const handleCategoryChange = category => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = e => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -60,7 +101,7 @@ export default function Home() {
             Discover Activities
           </h1>
           <p className="text-gray-600">
-            Find people looking for activities or share your own
+            Find people looking 4 activities or share your own
           </p>
         </div>
         {user && (
@@ -78,7 +119,7 @@ export default function Home() {
             type="text"
             placeholder="Search posts..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <svg
@@ -97,7 +138,7 @@ export default function Home() {
 
         <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
           <button
-            onClick={() => setSelectedCategory("all")}
+            onClick={() => handleCategoryChange("all")}
             className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               selectedCategory === "all"
                 ? "bg-blue-600 text-white"
@@ -108,7 +149,7 @@ export default function Home() {
           {categories.map(category => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => handleCategoryChange(category.id)}
               className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 selectedCategory === category.id
                   ? "bg-blue-600 text-white"
@@ -124,24 +165,65 @@ export default function Home() {
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      ) : filteredPosts.length === 0 ? (
+      ) : posts.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No posts found</p>
           <p className="text-gray-400 text-sm mt-2">
             Try adjusting your filters or search query
           </p>
           <button
-            onClick={loadData}
+            onClick={() => loadData(1)}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
             Refresh
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredPosts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className="rounded-lg px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Previous
+              </button>
+
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}>
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="rounded-lg px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Next
+              </button>
+
+              <span className="text-sm text-gray-600 ml-2">
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

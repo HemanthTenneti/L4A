@@ -52,7 +52,7 @@ export default function Header() {
             <span className="text-lg font-bold text-white">L4A</span>
           </div>
           <span className="hidden font-bold text-xl sm:inline-block">
-            Looking for Activities
+            Looking 4 Activities
           </span>
         </Link>
 

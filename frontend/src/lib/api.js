@@ -213,4 +213,38 @@ export const api = {
       `/users/${userId}/posts${queryString ? `?${queryString}` : ""}`
     );
   },
+
+  // Reviews
+  createReview: async (reviewedUserId, rating, comment) => {
+    return fetchWithAuth("/reviews", {
+      method: "POST",
+      body: JSON.stringify({ reviewedUserId, rating, comment }),
+    });
+  },
+
+  getUserReviews: async userId => {
+    return fetchWithAuth(`/reviews/user/${userId}`);
+  },
+
+  deleteReview: async reviewId => {
+    return fetchWithAuth(`/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Favorites
+  toggleFavorite: async postId => {
+    return fetchWithAuth(`/favorites/${postId}`, {
+      method: "POST",
+    });
+  },
+
+  checkFavorite: async postId => {
+    return fetchWithAuth(`/favorites/${postId}/check`);
+  },
+
+  getUserFavorites: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return fetchWithAuth(`/favorites${queryString ? `?${queryString}` : ""}`);
+  },
 };

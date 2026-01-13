@@ -1,12 +1,75 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, onFavoriteToggle }) {
   const [imageError, setImageError] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      checkFavorite();
+      fetchUserRating();
+    }
+  }, [user, post.id]);
+
+  const checkFavorite = async () => {
+    try {
+      const response = await api.checkFavorite(post.id);
+      if (response.success) {
+        setIsFavorited(response.data.isFavorited);
+      }
+    } catch (error) {
+      console.error("Error checking favorite:", error);
+    }
+  };
+
+  const fetchUserRating = async () => {
+    try {
+      const response = await api.getUserReviews(post.user?.id);
+      if (response.success && response.data.reviews) {
+        const myReview = response.data.reviews.find(
+          r => r.reviewerId === user.id
+        );
+        if (myReview) {
+          setUserRating(myReview.rating);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching rating:", error);
+    }
+  };
+
+  const handleToggleFavorite = async e => {
+    e.stopPropagation();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.toggleFavorite(post.id);
+      if (response.success) {
+        setIsFavorited(response.data.isFavorited);
+        if (onFavoriteToggle) {
+          onFavoriteToggle(post.id, response.data.isFavorited);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!post) {
     return null;
@@ -102,6 +165,30 @@ export default function PostCard({ post }) {
             <span>•</span>
             <span>{formatDate(post.createdAt)}</span>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleToggleFavorite}
+            disabled={loading}
+            className={`p-2 rounded-lg transition-colors ${
+              isFavorited
+                ? "bg-red-100 text-red-600 hover:bg-red-200"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+            title={isFavorited ? "Remove from favorites" : "Add to favorites"}>
+            <svg
+              className="h-5 w-5"
+              fill={isFavorited ? "currentColor" : "none"}
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

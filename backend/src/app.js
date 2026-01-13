@@ -7,6 +7,8 @@ const categoriesRoutes = require("./routes/categories");
 const chatsRoutes = require("./routes/chats");
 const notificationsRoutes = require("./routes/notifications");
 const usersRoutes = require("./routes/users");
+const reviewsRoutes = require("./routes/reviews");
+const favoritesRoutes = require("./routes/favorites");
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.use("/categories", categoriesRoutes);
 app.use("/chats", chatsRoutes);
 app.use("/notifications", notificationsRoutes);
 app.use("/users", usersRoutes);
+app.use("/reviews", reviewsRoutes);
+app.use("/favorites", favoritesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

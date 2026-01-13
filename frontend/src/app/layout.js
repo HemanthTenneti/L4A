@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "L4A - Looking for Activities",
+  title: "L4A - Looking 4 Activities",
   description: "Connect with people for activities and events",
 };
 
