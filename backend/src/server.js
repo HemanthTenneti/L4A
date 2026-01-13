@@ -9,7 +9,18 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:3000",
+        process.env.CLIENT_URL,
+      ].filter(Boolean);
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all origins for Socket.IO in production
+      }
+    },
     credentials: true,
   },
 });
