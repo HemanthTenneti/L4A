@@ -1,14 +1,12 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../utils/db");
 const { z } = require("zod");
 
-const prisma = new PrismaClient();
-
 const updatePostSchema = z.object({
-  title: z.string().min(5).max(200).optional(),
-  description: z.string().min(10).max(5000).optional(),
-  categoryId: z.string().uuid().optional(),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().min(1).max(5000).optional(),
+  categoryId: z.string().min(1).optional(),
   location: z.string().optional(),
-  allowMultipleChats: z.boolean().optional(),
+  allowMultipleParticipants: z.boolean().optional(),
 });
 
 const updatePost = async (req, res) => {
@@ -23,15 +21,13 @@ const updatePost = async (req, res) => {
     }
 
     if (post.userId !== req.userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to update this post",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this post",
+      });
     }
 
-    if (post.isClosed) {
+    if (!post.isOpen) {
       return res
         .status(400)
         .json({ success: false, message: "Cannot update a closed post" });

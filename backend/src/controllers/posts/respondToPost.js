@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../utils/db");
 const { getIO } = require("../../utils/socket");
 const {
   sendToastToRoom,
@@ -6,12 +6,10 @@ const {
   TOAST_TYPES,
 } = require("../../utils/toast");
 
-const prisma = new PrismaClient();
-
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     const post = await prisma.post.findUnique({
       where: { id },
@@ -76,6 +74,31 @@ module.exports = async (req, res) => {
 
       const responder = await prisma.user.findUnique({
         where: { id: userId },
+        select: { id: true, username: true },
+      });
+
+      // Create notification for the post owner
+      await prisma.notification.create({
+        data: {
+          userId: post.userId,
+          postId: id,
+          type: "POST_RESPONSE",
+          payload: {
+            responderId: responder.id,
+            responderName: responder.username,
+            postTitle: post.title,
+            chatRoomId: chat.id,
+          },
+        },
+      });
+
+      // Emit notification via socket
+      const io = getIO();
+      io.to(post.userId).emit("notification:new", {
+        type: "POST_RESPONSE",
+        message: `${responder.username} responded to your post "${post.title}"`,
+        postId: id,
+        chatRoomId: chat.id,
       });
 
       const toast = createToast(

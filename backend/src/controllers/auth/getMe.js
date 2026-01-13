@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../../utils/db");
 
 const getMe = async (req, res) => {
   try {
@@ -26,7 +24,7 @@ const getMe = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: { user },
+      data: user,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

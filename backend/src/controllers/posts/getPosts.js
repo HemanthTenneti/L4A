@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../../utils/db");
 
 const getPosts = async (req, res) => {
   try {
@@ -20,7 +18,7 @@ const getPosts = async (req, res) => {
 
     if (categoryId) where.categoryId = categoryId;
     if (location) where.location = { contains: location };
-    if (isClosed !== undefined) where.isClosed = isClosed === "true";
+    if (isClosed !== undefined) where.isOpen = isClosed !== "true";
 
     if (search) {
       where.OR = [
@@ -33,7 +31,7 @@ const getPosts = async (req, res) => {
       sort === "oldest"
         ? { createdAt: "asc" }
         : sort === "popular"
-        ? { chatRooms: { _count: "desc" } }
+        ? { chatRoom: { _count: "desc" } }
         : { createdAt: "desc" };
 
     const posts = await prisma.post.findMany({
@@ -44,7 +42,6 @@ const getPosts = async (req, res) => {
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
         category: { select: { id: true, name: true } },
-        _count: { select: { chatRooms: true } },
       },
     });
 

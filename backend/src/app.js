@@ -5,6 +5,8 @@ const authRoutes = require("./routes/auth");
 const postsRoutes = require("./routes/posts");
 const categoriesRoutes = require("./routes/categories");
 const chatsRoutes = require("./routes/chats");
+const notificationsRoutes = require("./routes/notifications");
+const usersRoutes = require("./routes/users");
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
 app.use("/categories", categoriesRoutes);
 app.use("/chats", chatsRoutes);
+app.use("/notifications", notificationsRoutes);
+app.use("/users", usersRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -5,7 +5,9 @@ const {
 
 const refresh = async (req, res) => {
   try {
-    const { refreshToken } = req.cookies;
+    // Check both cookies and request body for refresh token
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
     if (!refreshToken) {
       return res
         .status(401)

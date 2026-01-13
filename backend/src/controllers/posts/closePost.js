@@ -1,12 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../utils/db");
 const { getIO } = require("../../utils/socket");
 const {
   sendToastToRoom,
   createToast,
   TOAST_TYPES,
 } = require("../../utils/toast");
-
-const prisma = new PrismaClient();
 
 const closePost = async (req, res) => {
   try {
@@ -22,7 +20,7 @@ const closePost = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    if (post.userId !== req.user.id) {
+    if (post.userId !== req.userId) {
       return res
         .status(403)
         .json({ success: false, message: "Not authorized to close this post" });

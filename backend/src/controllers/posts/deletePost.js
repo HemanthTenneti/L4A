@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../../utils/db");
 
 const deletePost = async (req, res) => {
   try {
@@ -13,12 +11,10 @@ const deletePost = async (req, res) => {
     }
 
     if (post.userId !== req.userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to delete this post",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this post",
+      });
     }
 
     await prisma.post.delete({ where: { id } });

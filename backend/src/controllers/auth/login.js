@@ -1,11 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../utils/db");
 const { comparePassword } = require("../../utils/password");
 const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../../utils/token");
-
-const prisma = new PrismaClient();
 
 const login = async (req, res) => {
   try {
@@ -46,6 +44,7 @@ const login = async (req, res) => {
       data: {
         user: { id: user.id, username: user.username, email: user.email },
         accessToken,
+        refreshToken,
       },
     });
   } catch (error) {

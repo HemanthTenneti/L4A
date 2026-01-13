@@ -1,11 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../utils/db");
 const { hashPassword, comparePassword } = require("../../utils/password");
 const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../../utils/token");
-
-const prisma = new PrismaClient();
 
 const register = async (req, res) => {
   try {
@@ -47,7 +45,7 @@ const register = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: { user, accessToken },
+      data: { user, accessToken, refreshToken },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

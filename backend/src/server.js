@@ -51,7 +51,14 @@ io.on("connection", socket => {
   socket.on("chat:join", data => {
     const { chatRoomId } = data;
     socket.join(chatRoomId);
-    console.log(`User ${socket.username} joined room ${chatRoomId}`);
+    console.log(
+      `User ${socket.username} (${socket.userId}) joined room ${chatRoomId}`
+    );
+    console.log(
+      `Room ${chatRoomId} now has ${
+        io.sockets.adapter.rooms.get(chatRoomId)?.size || 0
+      } members`
+    );
 
     io.to(chatRoomId).emit("chat:user-joined", {
       userId: socket.userId,

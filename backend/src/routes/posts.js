@@ -7,6 +7,7 @@ const updatePost = require("../controllers/posts/updatePost");
 const deletePost = require("../controllers/posts/deletePost");
 const closePost = require("../controllers/posts/closePost");
 const respondToPost = require("../controllers/posts/respondToPost");
+const checkUserResponse = require("../controllers/posts/checkUserResponse");
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.put("/:id", verifyToken, updatePost);
 router.delete("/:id", verifyToken, deletePost);
 router.post("/:id/close", verifyToken, closePost);
 router.post("/:id/respond", verifyToken, respondToPost);
+router.get("/:postId/check-response", verifyToken, checkUserResponse);
 
 module.exports = router;
